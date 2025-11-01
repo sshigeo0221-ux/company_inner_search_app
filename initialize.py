@@ -140,12 +140,42 @@ def initialize_retriever():
 
     # ベクターストアの作成
     logger.info("ベクターストア作成開始")
-    db = Chroma.from_documents(splitted_docs, embedding=embeddings)
-    logger.info("ベクターストア作成完了")
+    try:
+        # ChromaDBの一時ディレクトリを明示的に設定
+        import tempfile
+        temp_dir = tempfile.mkdtemp()
+        db = Chroma.from_documents(
+            splitted_docs, 
+            embedding=embeddings,
+            persist_directory=temp_dir
+        )
+        logger.info("ベクターストア作成完了")
+    except Exception as e:
+        logger.error(f"ベクターストア作成エラー: {e}")
+        # より簡単な方法でベクターストアを作成
+        try:
+            logger.info("代替方法でベクターストア作成を試行（インメモリ）")
+            # インメモリでベクターストアを作成（永続化なし）
+            db = Chroma.from_documents(splitted_docs, embedding=embeddings)
+            logger.info("代替ベクターストア作成完了")
+        except Exception as e2:
+            logger.error(f"代替ベクターストア作成も失敗: {e2}")
+            # 最小限のチャンクで再試行
+            try:
+                logger.info("最小限のデータでベクターストア作成を試行")
+                db = Chroma.from_documents(splitted_docs[:50], embedding=embeddings)
+                logger.info("最小限ベクターストア作成完了")
+            except Exception as e3:
+                logger.error(f"最小限ベクターストア作成も失敗: {e3}")
+                raise e3
 
     # ベクターストアを検索するRetrieverの作成
-    st.session_state.retriever = db.as_retriever(search_kwargs={"k": 5})
-    logger.info("RAG初期化処理完了")
+    try:
+        st.session_state.retriever = db.as_retriever(search_kwargs={"k": 5})
+        logger.info("RAG初期化処理完了")
+    except Exception as e:
+        logger.error(f"Retriever作成エラー: {e}")
+        raise e
 
 
 def initialize_session_state():
