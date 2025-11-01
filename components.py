@@ -32,10 +32,11 @@ def display_select_mode():
 
         # モード切り替え
         selected_mode = st.radio(
-            label="",
+            label="利用モード選択",
             options=[ct.ANSWER_MODE_1, ct.ANSWER_MODE_2],
             index=0 if st.session_state.get("mode") == ct.ANSWER_MODE_1 else 1,
-            key="mode_radio"
+            key="mode_radio",
+            label_visibility="collapsed"
         )
         
         # セッション状態を更新
