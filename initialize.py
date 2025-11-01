@@ -108,8 +108,13 @@ def initialize_retriever():
     if "retriever" in st.session_state:
         return
     
+    # 初期化開始ログ
+    logger.info("RAG初期化処理開始")
+    
     # RAGの参照先となるデータソースの読み込み
+    logger.info("データソース読み込み開始")
     docs_all = load_data_sources()
+    logger.info(f"読み込み完了: {len(docs_all)} ドキュメント")
 
     # OSがWindowsの場合、Unicode正規化と、cp932（Windows用の文字コード）で表現できない文字を除去
     for doc in docs_all:
@@ -118,9 +123,11 @@ def initialize_retriever():
             doc.metadata[key] = adjust_string(doc.metadata[key])
     
     # 埋め込みモデルの用意
+    logger.info("埋め込みモデル準備開始")
     embeddings = OpenAIEmbeddings()
     
     # チャンク分割用のオブジェクトを作成
+    logger.info("チャンク分割開始")
     text_splitter = CharacterTextSplitter(
         chunk_size=ct.CHUNK_SIZE,
         chunk_overlap=ct.CHUNK_OVERLAP,
@@ -129,12 +136,16 @@ def initialize_retriever():
 
     # チャンク分割を実施
     splitted_docs = text_splitter.split_documents(docs_all)
+    logger.info(f"チャンク分割完了: {len(splitted_docs)} チャンク")
 
     # ベクターストアの作成
+    logger.info("ベクターストア作成開始")
     db = Chroma.from_documents(splitted_docs, embedding=embeddings)
+    logger.info("ベクターストア作成完了")
 
     # ベクターストアを検索するRetrieverの作成
     st.session_state.retriever = db.as_retriever(search_kwargs={"k": 5})
+    logger.info("RAG初期化処理完了")
 
 
 def initialize_session_state():
@@ -213,10 +224,17 @@ def file_load(path, docs_all):
 
     # 想定していたファイル形式の場合のみ読み込む
     if file_extension in ct.SUPPORTED_EXTENSIONS:
-        # ファイルの拡張子に合ったdata loaderを使ってデータ読み込み
-        loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
-        docs = loader.load()
-        docs_all.extend(docs)
+        try:
+            # ファイルの拡張子に合ったdata loaderを使ってデータ読み込み
+            loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
+            docs = loader.load()
+            docs_all.extend(docs)
+        except Exception as e:
+            # ロガーを読み込み、エラーログ出力
+            logger = logging.getLogger(ct.LOGGER_NAME)
+            logger.error(f"ファイル読み込みエラー: {path} - {e}")
+            print(f"Warning: ファイル '{path}' の読み込みに失敗しました: {e}")
+            # エラーが発生したファイルはスキップして処理を続行
 
 
 def adjust_string(s):
