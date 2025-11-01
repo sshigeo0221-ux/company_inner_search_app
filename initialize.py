@@ -72,10 +72,9 @@ def initialize_logger():
     # - 「asctime」: ログのタイムスタンプ（いつ記録されたか）
     # - 「lineno」: ログが出力されたファイルの行番号
     # - 「funcName」: ログが出力された関数名
-    # - 「session_id」: セッションID（誰のアプリ操作か分かるように）
     # - 「message」: ログメッセージ
     formatter = logging.Formatter(
-        f"[%(levelname)s] %(asctime)s line %(lineno)s, in %(funcName)s, session_id={st.session_state.session_id}: %(message)s"
+        "[%(levelname)s] %(asctime)s line %(lineno)s, in %(funcName)s: %(message)s"
     )
 
     # 定義したフォーマッターの適用
