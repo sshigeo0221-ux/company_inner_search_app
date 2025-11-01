@@ -23,17 +23,42 @@ def display_app_title():
 
 def display_select_mode():
     """
-    回答モードのラジオボタンを表示
+    サイドバーに回答モードのラジオボタンを表示
     """
-    # 回答モードを選択する用のラジオボタンを表示
-    col1, col2 = st.columns([100, 1])
-    with col1:
-        # 「label_visibility="collapsed"」とすることで、ラジオボタンを非表示にする
-        st.session_state.mode = st.radio(
+    # サイドバーの表示
+    with st.sidebar:
+        st.markdown("### 利用目的")
+        st.markdown("モード選択")
+
+        # モード切り替え
+        selected_mode = st.radio(
             label="",
             options=[ct.ANSWER_MODE_1, ct.ANSWER_MODE_2],
-            label_visibility="collapsed"
+            index=0 if st.session_state.get("mode") == ct.ANSWER_MODE_1 else 1,
+            key="mode_radio"
         )
+        
+        # セッション状態を更新
+        st.session_state.mode = selected_mode
+        
+        # 現在のモードの説明
+        st.markdown("---")
+        st.markdown("### 現在のモード")
+        if selected_mode == ct.ANSWER_MODE_1:
+            st.info("📁 社内文書のファイル場所を検索します")
+        else:
+            st.info("💬 社内文書の内容をもとに質問に回答します")
+        
+        # データソース情報
+        st.markdown("---")
+        st.markdown("### 検索対象")
+        st.markdown("""
+        - 📋 MTG議事録
+        - 🏢 会社情報
+        - 🛠️ サービス情報
+        - 👥 顧客情報
+        - 👤 社員情報
+        """)
 
 
 def display_initial_ai_message():
@@ -42,7 +67,7 @@ def display_initial_ai_message():
     """
     with st.chat_message("assistant"):
         # 「st.success()」とすると緑枠で表示される
-        st.markdown("こんにちは。私は社内文書の情報をもとに回答する生成AIチャットボットです。上記で利用目的を選択し、画面下部のチャット欄からメッセージを送信してください。")
+        st.markdown("こんにちは。私は社内文書の情報をもとに回答する生成AIチャットボットです。左のサイドバーで利用目的を選択し、画面下部のチャット欄からメッセージを送信してください。")
 
         # 「社内文書検索」の機能説明
         st.markdown("**【「社内文書検索」を選択した場合】**")
